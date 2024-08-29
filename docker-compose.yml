@@ -6,50 +6,50 @@ services:
     image: projectnessie/nessie:latest
     container_name: nessie
     networks:
-      dremio-spark:
+      - dremio-spark
     ports:
       - 19120:19120
+    volumes:
+      - nessie-data:/var/lib/nessie
+
   # Minio Storage Server
   minio:
     image: minio/minio:latest
     container_name: minio
-   
-
     networks:
-      dremio-spark:
+      - dremio-spark
     ports:
       - 9001:9001
       - 9000:9000
     command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio-data:/data
+
   # Dremio
   dremio:
     platform: linux/x86_64
     image: dremio/dremio-oss:latest
+    container_name: dremio
+    environment:
+      - DREMIO_JAVA_SERVER_EXTRA_OPTS=-Dpaths.dist=file:///opt/dremio/data/dist
+    networks:
+      - dremio-spark
     ports:
       - 9047:9047
       - 31010:31010
       - 32010:32010
       - 45678:45678
-    container_name: dremio
-    environment:
-      - DREMIO_JAVA_SERVER_EXTRA_OPTS=-Dpaths.dist=file:///opt/dremio/data/dist
-    networks:
-      dremio-spark:
-  # Spark
+    volumes:
+      - dremio-data:/opt/dremio/data
+
   # Spark
   spark:
     platform: linux/x86_64
     image: alexmerced/spark35notebook:latest
+    container_name: spark
+    networks:
+      - dremio-spark
     ports: 
       - 8080:8080  # Master Web UI
       - 7077:7077  # Master Port
       - 8888:8888  # Notebook
-    environment:
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY_ID=admin #minio username
-      - AWS_SECRET_ACCESS_KEY=password #minio password
-    container_name: spark
-    networks:
-      dremio-spark:
-networks:
-  dremio-spark:
