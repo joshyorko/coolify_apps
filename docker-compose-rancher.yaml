@@ -1,0 +1,17 @@
+services:
+  rancher-server:
+    image: rancher/rancher:latest
+    container_name: rancher-server
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "80:80"   # HTTP
+      - "9000:443" # HTTPS
+    volumes:
+      - /opt/rancher-data:/var/lib/rancher
+    environment:
+      CATTLE_SYSTEM_DEFAULT_REGISTRY: "" # Use this if needed for private registry
+
+networks:
+  default:
+    driver: bridge
